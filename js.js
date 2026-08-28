@@ -521,3 +521,17 @@ window.addEventListener('DOMContentLoaded', () => {
         if (contenedorPrincipalApp) contenedorPrincipalApp.style.display = 'none';
     }
 });
+const modalTerminos = document.getElementById('modalTerminos');
+const btnCerrar = document.getElementById('btnCerrarTerminos');
+const btnAceptar = document.getElementById('btnAceptarTerminos');
+
+function abrirTerminos() {
+  modalTerminos.classList.remove('hidden');
+}
+function cerrarTerminos() {
+  modalTerminos.classList.add('hidden');
+}
+
+btnCerrar.addEventListener('click', cerrarTerminos);
+btnAceptar.addEventListener('click', cerrarTerminos);
+});
