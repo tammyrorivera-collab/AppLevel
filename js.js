@@ -9,6 +9,7 @@ let cuadernoVirtual = {
 let estudianteConectado = JSON.parse(localStorage.getItem('usuarioActivo')) || null;
 let relojPomodoro = null;
 let minutosEstudioRestantes = 25 * 60;
+let estadoFiltroMaterias = 'todas';
 
 function guardarBD() {
     localStorage.setItem('db_usuarios', JSON.stringify(cuadernoVirtual.estudiantes));
@@ -29,8 +30,8 @@ function mostrarLoginRegistro() {
 }
 
 function registrarUsuario() {
-    const nombreAlumno = document.getElementById('registro-nombre').value;
-    const correoMatricula = document.getElementById('registro-usuario').value;
+    const nombreAlumno = document.getElementById('registro-nombre').value.trim();
+    const correoMatricula = document.getElementById('registro-usuario').value.trim();
     const claveAcceso = document.getElementById('registro-contrasenna').value;
     const claveConfirmacion = document.getElementById('registro-confirmar').value;
 
@@ -59,7 +60,7 @@ function registrarUsuario() {
 }
 
 function iniciarSesion() {
-    const correoIngresado = document.getElementById('login-usuario').value;
+    const correoIngresado = document.getElementById('login-usuario').value.trim();
     const claveIngresada = document.getElementById('login-contrasenna').value;
     const alumnoEncontrado = cuadernoVirtual.estudiantes.find(e => e.email === correoIngresado && e.contraseña === claveIngresada);
 
@@ -86,7 +87,7 @@ function cargarApp() {
     
     const menuNavegacion = document.getElementById('menu-principal');
     const botonNuevaEntrega = document.getElementById('btn-agregar');
-    if (menuNavegacion) menuNavegacion.style.display = 'flex';
+    if (menuNavegacion) menuNavegacion.style.display = 'block';
     if (botonNuevaEntrega) botonNuevaEntrega.style.display = 'flex';
     
     actualizarEncabezadoUsuario();
@@ -151,6 +152,7 @@ function abrirNotificaciones() {
 }
 function abrirPrivacidad() { cambiarPantallaApp('privacidad'); }
 function volverAPerfil() { cambiarPantallaApp('perfil'); }
+function volverATareas() { cambiarPantallaApp('tareas'); }
 
 function guardarTarea() {
     const tituloAsignacion = document.getElementById('titulo').value.trim();
@@ -176,6 +178,7 @@ function guardarTarea() {
 
     document.getElementById('titulo').value = '';
     document.getElementById('descripcion').value = '';
+    
     const ventanaModalElemento = document.getElementById('modalTarea');
     if (ventanaModalElemento) {
         const instanciaModal = bootstrap.Modal.getInstance(ventanaModalElemento) || new bootstrap.Modal(ventanaModalElemento);
@@ -183,12 +186,12 @@ function guardarTarea() {
     }
 }
 
-let estadoFiltroMaterias = 'todas';
-
 function renderizarTareas(filtro = estadoFiltroMaterias) {
     estadoFiltroMaterias = filtro;
     const panelListaDeberes = document.getElementById('lista-tareas');
     const panelInicioDeberes = document.getElementById('proximas-tareas-inicio');
+
+    if (!estudianteConectado) return;
 
     const asignacionesAlumno = cuadernoVirtual.entregas.filter(a => a.id_usuario === estudianteConectado.id_usuario);
     let deberesFiltrados = asignacionesAlumno;
@@ -314,7 +317,9 @@ function mostrarTextoRacha(diasEstudiados) {
     }
 }
 
-function cambiarTema() { document.body.classList.toggle('modo-oscuro'); }
+function cambiarTema() { 
+    document.body.classList.toggle('modo-oscuro'); 
+}
 
 function toggleProgresoPerfil() {
     const interruptorRendimiento = document.getElementById('privProgreso');
@@ -540,8 +545,4 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (btnCerrar) btnCerrar.addEventListener('click', cerrarTerminos);
     if (btnAceptar) btnAceptar.addEventListener('click', cerrarTerminos);
-});
-
-btnCerrar.addEventListener('click', cerrarTerminos);
-btnAceptar.addEventListener('click', cerrarTerminos);
 });
