@@ -79,8 +79,10 @@ function cargarApp() {
     document.getElementById('pantalla-intro').classList.remove('active');
     document.getElementById('pantalla-login').classList.remove('active');
     
-    document.getElementById('app-header').style.display = 'block';
-    document.getElementById('app-container').style.display = 'block';
+    const appHeader = document.getElementById('app-header');
+    const appContainer = document.getElementById('app-container');
+    if (appHeader) appHeader.style.display = 'block';
+    if (appContainer) appContainer.style.display = 'block';
     
     const menuNavegacion = document.getElementById('menu-principal');
     const botonNuevaEntrega = document.getElementById('btn-agregar');
@@ -175,8 +177,10 @@ function guardarTarea() {
     document.getElementById('titulo').value = '';
     document.getElementById('descripcion').value = '';
     const ventanaModalElemento = document.getElementById('modalTarea');
-    const instanciaModal = bootstrap.Modal.getInstance(ventanaModalElemento) || new bootstrap.Modal(ventanaModalElemento);
-    instanciaModal.hide();
+    if (ventanaModalElemento) {
+        const instanciaModal = bootstrap.Modal.getInstance(ventanaModalElemento) || new bootstrap.Modal(ventanaModalElemento);
+        instanciaModal.hide();
+    }
 }
 
 let estadoFiltroMaterias = 'todas';
@@ -506,6 +510,16 @@ function verificarNotificacionesPendientes() {
     }
 }
 
+function abrirTerminos() {
+    const modalTerminos = document.getElementById('modalTerminos');
+    if (modalTerminos) modalTerminos.classList.remove('hidden');
+}
+
+function cerrarTerminos() {
+    const modalTerminos = document.getElementById('modalTerminos');
+    if (modalTerminos) modalTerminos.classList.add('hidden');
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const menuNavegacion = document.getElementById('menu-principal');
     const botonNuevaEntrega = document.getElementById('btn-agregar');
@@ -520,17 +534,13 @@ window.addEventListener('DOMContentLoaded', () => {
         if (encabezadoApp) encabezadoApp.style.display = 'none';
         if (contenedorPrincipalApp) contenedorPrincipalApp.style.display = 'none';
     }
-});
-const modalTerminos = document.getElementById('modalTerminos');
-const btnCerrar = document.getElementById('btnCerrarTerminos');
-const btnAceptar = document.getElementById('btnAceptarTerminos');
 
-function abrirTerminos() {
-  modalTerminos.classList.remove('hidden');
-}
-function cerrarTerminos() {
-  modalTerminos.classList.add('hidden');
-}
+    const btnCerrar = document.getElementById('btnCerrarTerminos');
+    const btnAceptar = document.getElementById('btnAceptarTerminos');
+
+    if (btnCerrar) btnCerrar.addEventListener('click', cerrarTerminos);
+    if (btnAceptar) btnAceptar.addEventListener('click', cerrarTerminos);
+});
 
 btnCerrar.addEventListener('click', cerrarTerminos);
 btnAceptar.addEventListener('click', cerrarTerminos);
