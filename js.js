@@ -20,20 +20,31 @@ function guardarBD() {
 }
 
 function mostrarIntro() {
-    document.getElementById('pantalla-bienvenida').classList.remove('active');
-    document.getElementById('pantalla-intro').classList.add('active');
+    const bienvenida = document.getElementById('pantalla-bienvenida');
+    const intro = document.getElementById('pantalla-intro');
+    if (bienvenida) bienvenida.classList.remove('active');
+    if (intro) intro.classList.add('active');
 }
 
 function mostrarLoginRegistro() {
-    document.getElementById('pantalla-intro').classList.remove('active');
-    document.getElementById('pantalla-login').classList.add('active');
+    const intro = document.getElementById('pantalla-intro');
+    const login = document.getElementById('pantalla-login');
+    if (intro) intro.classList.remove('active');
+    if (login) login.classList.add('active');
 }
 
 function registrarUsuario() {
-    const nombreAlumno = document.getElementById('registro-nombre').value.trim();
-    const correoMatricula = document.getElementById('registro-usuario').value.trim();
-    const claveAcceso = document.getElementById('registro-contrasenna').value;
-    const claveConfirmacion = document.getElementById('registro-confirmar').value;
+    const nombreInput = document.getElementById('registro-nombre');
+    const usuarioInput = document.getElementById('registro-usuario');
+    const passInput = document.getElementById('registro-contrasenna');
+    const confirmInput = document.getElementById('registro-confirmar');
+
+    if (!nombreInput || !usuarioInput || !passInput) return;
+
+    const nombreAlumno = nombreInput.value.trim();
+    const correoMatricula = usuarioInput.value.trim();
+    const claveAcceso = passInput.value;
+    const claveConfirmacion = confirmInput ? confirmInput.value : '';
 
     if (!nombreAlumno || !correoMatricula || !claveAcceso) return alert('Por favor completa todos los campos.');
     if (claveAcceso !== claveConfirmacion) return alert('Las contraseñas no coinciden.');
@@ -60,8 +71,13 @@ function registrarUsuario() {
 }
 
 function iniciarSesion() {
-    const correoIngresado = document.getElementById('login-usuario').value.trim();
-    const claveIngresada = document.getElementById('login-contrasenna').value;
+    const usuarioInput = document.getElementById('login-usuario');
+    const passInput = document.getElementById('login-contrasenna');
+
+    if (!usuarioInput || !passInput) return;
+
+    const correoIngresado = usuarioInput.value.trim();
+    const claveIngresada = passInput.value;
     const alumnoEncontrado = cuadernoVirtual.estudiantes.find(e => e.email === correoIngresado && e.contraseña === claveIngresada);
 
     if (alumnoEncontrado) {
@@ -76,9 +92,10 @@ function iniciarSesion() {
 }
 
 function cargarApp() {
-    document.getElementById('pantalla-bienvenida').classList.remove('active');
-    document.getElementById('pantalla-intro').classList.remove('active');
-    document.getElementById('pantalla-login').classList.remove('active');
+    ['pantalla-bienvenida', 'pantalla-intro', 'pantalla-login'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
     
     const appHeader = document.getElementById('app-header');
     const appContainer = document.getElementById('app-container');
@@ -102,26 +119,9 @@ function cargarApp() {
 }
 
 function actualizarEncabezadoUsuario() {
-    if (document.getElementById('usuario-activo')) {
+    if (document.getElementById('usuario-activo') && estudianteConectado) {
         document.getElementById('usuario-activo').innerText = `${estudianteConectado.nombre} | Nivel ${estudianteConectado.nivel} (${estudianteConectado.xp} XP)`;
     }
-}
-
-function agregarXP(puntosExperiencia) {
-    estudianteConectado.xp += puntosExperiencia;
-    const gradoAlcanzado = Math.floor(estudianteConectado.xp / 200) + 1;
-    
-    if (gradoAlcanzado > estudianteConectado.nivel) {
-        estudianteConectado.nivel = gradoAlcanzado;
-        alert(`¡Felicidades! Has alcanzado el Nivel ${gradoAlcanzado}`);
-    }
-    
-    const indiceAlumno = cuadernoVirtual.estudiantes.findIndex(e => e.id_usuario === estudianteConectado.id_usuario);
-    if (indiceAlumno !== -1) cuadernoVirtual.estudiantes[indiceAlumno] = estudianteConectado;
-
-    localStorage.setItem('usuarioActivo', JSON.stringify(estudianteConectado));
-    guardarBD();
-    actualizarEncabezadoUsuario();
 }
 
 function cambiarPantallaApp(seccionAcademica) {
@@ -155,18 +155,21 @@ function volverAPerfil() { cambiarPantallaApp('perfil'); }
 function volverATareas() { cambiarPantallaApp('tareas'); }
 
 function guardarTarea() {
-    const tituloAsignacion = document.getElementById('titulo').value.trim();
+    const tituloInput = document.getElementById('titulo');
+    if (!tituloInput) return;
+
+    const tituloAsignacion = tituloInput.value.trim();
     if (!tituloAsignacion) return alert('El título es obligatorio.');
 
     const nuevaAsignacion = {
         id_tarea: Date.now(),
         id_usuario: estudianteConectado.id_usuario,
         titulo: tituloAsignacion,
-        descripcion: document.getElementById('descripcion').value,
-        fecha: document.getElementById('fecha').value || new Date().toISOString().split('T')[0],
-        hora: document.getElementById('hora').value,
-        categoria: document.getElementById('categoria').value,
-        prioridad: document.getElementById('prioridad').value,
+        descripcion: document.getElementById('descripcion')?.value || '',
+        fecha: document.getElementById('fecha')?.value || new Date().toISOString().split('T')[0],
+        hora: document.getElementById('hora')?.value || '',
+        categoria: document.getElementById('categoria')?.value || 'General',
+        prioridad: document.getElementById('prioridad')?.value || 'media',
         estado: 'pendiente'
     };
 
@@ -176,11 +179,11 @@ function guardarTarea() {
     actualizarEstadisticas();
     verificarNotificacionesPendientes();
 
-    document.getElementById('titulo').value = '';
-    document.getElementById('descripcion').value = '';
+    tituloInput.value = '';
+    if (document.getElementById('descripcion')) document.getElementById('descripcion').value = '';
     
     const ventanaModalElemento = document.getElementById('modalTarea');
-    if (ventanaModalElemento) {
+    if (ventanaModalElemento && typeof bootstrap !== 'undefined') {
         const instanciaModal = bootstrap.Modal.getInstance(ventanaModalElemento) || new bootstrap.Modal(ventanaModalElemento);
         instanciaModal.hide();
     }
@@ -252,7 +255,6 @@ function completarTarea(idDeber) {
             deberEncontrado.estado = 'completada';
             deberEncontrado.fecha = new Date().toISOString().split('T')[0];
             agregarXP(50);
-            reproducirSonidoNotificacion('notificacion');
         } else {
             deberEncontrado.estado = 'pendiente';
         }
@@ -262,6 +264,24 @@ function completarTarea(idDeber) {
         actualizarRacha();
         verificarNotificacionesPendientes();
     }
+}
+
+function agregarXP(puntosExperiencia) {
+    if (!estudianteConectado) return;
+    estudianteConectado.xp += puntosExperiencia;
+    const gradoAlcanzado = Math.floor(estudianteConectado.xp / 200) + 1;
+    
+    if (gradoAlcanzado > estudianteConectado.nivel) {
+        estudianteConectado.nivel = gradoAlcanzado;
+        alert(`¡Felicidades! Has alcanzado el Nivel ${gradoAlcanzado}`);
+    }
+    
+    const indiceAlumno = cuadernoVirtual.estudiantes.findIndex(e => e.id_usuario === estudianteConectado.id_usuario);
+    if (indiceAlumno !== -1) cuadernoVirtual.estudiantes[indiceAlumno] = estudianteConectado;
+
+    localStorage.setItem('usuarioActivo', JSON.stringify(estudianteConectado));
+    guardarBD();
+    actualizarEncabezadoUsuario();
 }
 
 function actualizarRacha() {
@@ -340,88 +360,6 @@ function toggleProgresoPerfil() {
     }
 }
 
-function descargarMisDatos() {
-    if (!estudianteConectado) return alert('Debes iniciar sesión.');
-
-    const expedienteAcademico = {
-        perfil: estudianteConectado,
-        tareas: cuadernoVirtual.entregas.filter(a => a.id_usuario === estudianteConectado.id_usuario),
-        listas: cuadernoVirtual.materias.filter(m => m.id_usuario === estudianteConectado.id_usuario)
-    };
-
-    const estructuraDatosJSON = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expedienteAcademico, null, 2));
-    const enlaceDescargaJSON = document.createElement('a');
-    enlaceDescargaJSON.setAttribute("href", estructuraDatosJSON);
-    enlaceDescargaJSON.setAttribute("download", `mis_datos_levelstudy_${estudianteConectado.nombre.toLowerCase().replace(/\s+/g, '_')}.json`);
-    
-    document.body.appendChild(enlaceDescargaJSON);
-    enlaceDescargaJSON.click();
-    enlaceDescargaJSON.remove();
-}
-
-function exportarCSV() {
-    if (!estudianteConectado) return alert('Debes iniciar sesión.');
-
-    const tareasDelEstudiante = cuadernoVirtual.entregas.filter(a => a.id_usuario === estudianteConectado.id_usuario);
-    if (tareasDelEstudiante.length === 0) return alert('No tienes tareas registradas para exportar.');
-
-    let contenidoPlanillaCSV = "data:text/csv;charset=utf-8,ID,Titulo,Categoria,Prioridad,Estado,Fecha,Hora\n";
-
-    tareasDelEstudiante.forEach(d => {
-        const renglonCSV = `"${d.id_tarea}","${d.titulo}","${d.categoria}","${d.prioridad}","${d.estado}","${d.fecha || ''}","${d.hora || ''}"`;
-        contenidoPlanillaCSV += renglonCSV + "\n";
-    });
-
-    const datosFormateadosURI = encodeURI(contenidoPlanillaCSV);
-    const enlaceDescargaCSV = document.createElement("a");
-    enlaceDescargaCSV.setAttribute("href", datosFormateadosURI);
-    enlaceDescargaCSV.setAttribute("download", `tareas_levelstudy_${estudianteConectado.nombre.toLowerCase().replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(enlaceDescargaCSV);
-    enlaceDescargaCSV.click();
-    enlaceDescargaCSV.remove();
-}
-
-function reproducirSonidoNotificacion(tipoAlerta = 'notificacion') {
-    const interruptorAudio = document.getElementById('notifSonido')?.checked ?? true;
-    if (!interruptorAudio) return;
-
-    try {
-        const AudioContextEstudio = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextEstudio) return;
-        const contextoAudio = new AudioContextEstudio();
-        
-        const osciladorTono = contextoAudio.createOscillator();
-        const controladorGanancia = contextoAudio.createGain();
-        osciladorTono.connect(controladorGanancia);
-        controladorGanancia.connect(contextoAudio.destination);
-
-        if (tipoAlerta === 'pomodoro') {
-            osciladorTono.type = 'triangle';
-            osciladorTono.frequency.setValueAtTime(523.25, contextoAudio.currentTime);
-            osciladorTono.frequency.setValueAtTime(659.25, contextoAudio.currentTime + 0.15);
-            osciladorTono.frequency.setValueAtTime(783.99, contextoAudio.currentTime + 0.30);
-            
-            controladorGanancia.gain.setValueAtTime(0.4, contextoAudio.currentTime);
-            controladorGanancia.gain.exponentialRampToValueAtTime(0.01, contextoAudio.currentTime + 0.6);
-            
-            osciladorTono.start(contextoAudio.currentTime);
-            osciladorTono.stop(contextoAudio.currentTime + 0.6);
-        } else {
-            osciladorTono.type = 'square';
-            osciladorTono.frequency.setValueAtTime(800, contextoAudio.currentTime); 
-            osciladorTono.frequency.setValueAtTime(1200, contextoAudio.currentTime + 0.08); 
-            
-            controladorGanancia.gain.setValueAtTime(0.25, contextoAudio.currentTime);
-            controladorGanancia.gain.exponentialRampToValueAtTime(0.01, contextoAudio.currentTime + 0.25);
-            
-            osciladorTono.start(contextoAudio.currentTime);
-            osciladorTono.stop(contextoAudio.currentTime + 0.25);
-        }
-    } catch (e) {
-        console.log(e);
-    }
-}
-
 function actualizarEstadisticas() {
     if (!estudianteConectado) return;
     const asignacionesAlumno = cuadernoVirtual.entregas.filter(a => a.id_usuario === estudianteConectado.id_usuario);
@@ -441,9 +379,8 @@ function iniciarTemp() {
         } else {
             clearInterval(relojPomodoro);
             relojPomodoro = null;
-            reproducirSonidoNotificacion('pomodoro');
             agregarXP(100);
-            alert('¡Tiempo de estudio terminado! Tómate 5 minutos de descanso, toma agua y estírate.');
+            alert('¡Tiempo de estudio terminado! Tómate 5 minutos de descanso.');
         }
     }, 1000);
 }
@@ -464,23 +401,6 @@ function actualizarReloj() {
     const segundosFormato = (minutosEstudioRestantes % 60).toString().padStart(2, '0');
     if (document.getElementById('temporizador')) {
         document.getElementById('temporizador').innerText = `${minutosFormato}:${segundosFormato}`;
-    }
-}
-
-function guardarPreferenciasNotif() {
-    const estadoNotifPush = document.getElementById('notifPush')?.checked;
-    reproducirSonidoNotificacion('notificacion');
-
-    if (estadoNotifPush && 'Notification' in window) {
-        Notification.requestPermission().then(permisoConcedido => {
-            if (permisoConcedido === 'granted') {
-                alert('Notificaciones y alertas activadas.');
-            } else {
-                alert('Preferencias guardadas.');
-            }
-        });
-    } else {
-        alert('Preferencias guardadas.');
     }
 }
 
@@ -515,16 +435,6 @@ function verificarNotificacionesPendientes() {
     }
 }
 
-function abrirTerminos() {
-    const modalTerminos = document.getElementById('modalTerminos');
-    if (modalTerminos) modalTerminos.classList.remove('hidden');
-}
-
-function cerrarTerminos() {
-    const modalTerminos = document.getElementById('modalTerminos');
-    if (modalTerminos) modalTerminos.classList.add('hidden');
-}
-
 window.addEventListener('DOMContentLoaded', () => {
     const menuNavegacion = document.getElementById('menu-principal');
     const botonNuevaEntrega = document.getElementById('btn-agregar');
@@ -539,10 +449,4 @@ window.addEventListener('DOMContentLoaded', () => {
         if (encabezadoApp) encabezadoApp.style.display = 'none';
         if (contenedorPrincipalApp) contenedorPrincipalApp.style.display = 'none';
     }
-
-    const btnCerrar = document.getElementById('btnCerrarTerminos');
-    const btnAceptar = document.getElementById('btnAceptarTerminos');
-
-    if (btnCerrar) btnCerrar.addEventListener('click', cerrarTerminos);
-    if (btnAceptar) btnAceptar.addEventListener('click', cerrarTerminos);
 });
